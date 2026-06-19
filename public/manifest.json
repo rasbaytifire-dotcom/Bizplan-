@@ -3,22 +3,34 @@
   "name": "BizPlan Academy",
   "short_name": "BizPlan",
   "description": "Simulation et Apprentissage Business Plan",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135810.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135810.png",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
