@@ -1,30 +1,24 @@
 {
-  "short_name": "BizPlanAcad",
-  "name": "BizPlan Academy - Le Business Plan Académique",
-  "description": "Apprenez et construisez votre Business Plan pas à pas grâce à nos cours, quiz interactifs et simulateurs financiers professionnels hors ligne.",
+  "id": "bizplan-academy-pwa-v2",
+  "name": "BizPlan Academy",
+  "short_name": "BizPlan",
+  "description": "Simulation et Apprentissage Business Plan",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "https://img.icons8.com/isometric/192/business-key.png",
-      "type": "image/png",
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135810.png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "https://img.icons8.com/isometric/512/business-key.png",
-      "type": "image/png",
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135810.png",
       "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "start_url": "/",
-  "background_color": "#f8fafc",
-  "theme_color": "#1e3a8a",
-  "display": "standalone",
-  "orientation": "any",
-  "dir": "ltr",
-  "lang": "fr-FR",
-  "categories": [
-    "education",
-    "business"
   ]
 }

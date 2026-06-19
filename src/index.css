@@ -136,7 +136,41 @@ body {
 
 /* Print simulation styling for reports */
 @media print {
-  .no-print {
+  .no-print, 
+  header, 
+  nav, 
+  footer, 
+  #btn-exit-focus,
+  #btn-save-pdf,
+  #btn-enter-focus,
+  button {
     display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  #applet-container, 
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .bg-white, .bg-slate-50, .bg-indigo-50, .bg-slate-50\/50, .bg-slate-50\/30 {
+    background-color: transparent !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-inner {
+    shadow: none !important;
+    box-shadow: none !important;
+  }
+  
+  #course-section {
+    display: block !important;
   }
 }

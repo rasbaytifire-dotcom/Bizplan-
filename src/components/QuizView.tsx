@@ -11,9 +11,15 @@ interface QuizViewProps {
   initialChapterId?: string;
   onNavigateToChapter: (chapterId: string) => void;
   onProgressChange?: (inProgress: boolean) => void;
+  onCompleteQuiz?: (chapterId: string) => void;
 }
 
-export default function QuizView({ initialChapterId = 'intro', onNavigateToChapter, onProgressChange }: QuizViewProps) {
+export default function QuizView({ 
+  initialChapterId = 'intro', 
+  onNavigateToChapter, 
+  onProgressChange,
+  onCompleteQuiz 
+}: QuizViewProps) {
   const [selectedChapterId, setSelectedChapterId] = useState<string>(initialChapterId);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState<number>(0);
@@ -135,6 +141,7 @@ export default function QuizView({ initialChapterId = 'intro', onNavigateToChapt
         await saveQuizAttempt(newAttempt);
         setStatusMessage('Résultats enregistrés hors ligne avec succès !');
         loadHistory();
+        onCompleteQuiz?.(selectedChapterId);
       } catch (err) {
         console.error('Erreur de sauvegarde IndexedDB:', err);
       }

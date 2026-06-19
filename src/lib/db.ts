@@ -277,3 +277,47 @@ export function saveBmcSegment(id: string, items: string[]): Promise<void> {
     });
   });
 }
+
+/**
+ * GLOBAL BACKUP EXPORT
+ * Fetches everything from all object stores and packages it into a portable JSON structure.
+ */
+export async function getAllBackupData(): Promise<any> {
+  const db = await initDB();
+  const stores = ['lexicon', 'quiz_attempts', 'swot', 'settings', 'budget', 'org_nodes', 'bmc'];
+  const backup: any = {
+    exportedAt: new Date().toISOString(),
+    version: DB_VERSION,
+    data: {}
+  };
+
+  for (const storeName of stores) {
+    try {
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      
+      const getAllRequest = store.getAll();
+      const keysRequest = store.getAllKeys();
+
+      const [data, keys] = await Promise.all([
+        new Promise<any[]>((res) => { getAllRequest.onsuccess = () => res(getAllRequest.result); }),
+        new Promise<any[]>((res) => { keysRequest.onsuccess = () => res(keysRequest.result); })
+      ]);
+
+      // If it's the 'settings' store, we might want to preserve the keys since it's key-value
+      if (storeName === 'settings') {
+        const settingsMap: Record<string, any> = {};
+        keys.forEach((key, i) => {
+          settingsMap[key as string] = data[i];
+        });
+        backup.data[storeName] = settingsMap;
+      } else {
+        backup.data[storeName] = data;
+      }
+    } catch (err) {
+      console.warn(`Export skipping store ${storeName}:`, err);
+    }
+  }
+
+  return backup;
+}

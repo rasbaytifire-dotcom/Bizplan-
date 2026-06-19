@@ -1,6 +1,6 @@
 {
   "name": "BizPlan Academy",
-  "description": "Une Progressive Web App (PWA) académique et interactive dédiée à la création et à l'exercice du Business Plan.",
+  "description": "Plateforme de formation au Business Plan conçue par Theridialart Vision.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
