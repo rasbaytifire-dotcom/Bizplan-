@@ -1,0 +1,6 @@
+{
+  "name": "BizPlan Academy",
+  "description": "Une Progressive Web App (PWA) académique et interactive dédiée à la création et à l'exercice du Business Plan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

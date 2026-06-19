@@ -1,0 +1,30 @@
+{
+  "short_name": "BizPlanAcad",
+  "name": "BizPlan Academy - Le Business Plan Académique",
+  "description": "Apprenez et construisez votre Business Plan pas à pas grâce à nos cours, quiz interactifs et simulateurs financiers professionnels hors ligne.",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/isometric/192/business-key.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://img.icons8.com/isometric/512/business-key.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "display": "standalone",
+  "orientation": "any",
+  "dir": "ltr",
+  "lang": "fr-FR",
+  "categories": [
+    "education",
+    "business"
+  ]
+}
