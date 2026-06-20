@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  BookOpen, CheckSquare, Award, FileText, Compass, LogOut, Sliders, Globe, Wifi, WifiOff, HelpCircle, GraduationCap, Sun, Moon, Download, Save, Printer 
+  BookOpen, CheckSquare, Award, FileText, Compass, LogOut, Sliders, Globe, Wifi, WifiOff, HelpCircle, GraduationCap, Sun, Moon, Download, Upload, Save, Printer 
 } from 'lucide-react';
 import CourseView from './components/CourseView';
 import QuizView from './components/QuizView';
@@ -8,7 +8,7 @@ import ExerciseView from './components/ExerciseView';
 import LexiconView from './components/LexiconView';
 import BmcView from './components/BmcView';
 import ConfirmModal from './components/ConfirmModal';
-import { initDB, getQuizAttempts, getLexicon, getAllBackupData } from './lib/db';
+import { initDB, getQuizAttempts, getLexicon, getAllBackupData, importBackupData } from './lib/db';
 
 export default function App() {
   // Navigation state
@@ -152,6 +152,58 @@ export default function App() {
       alert('Une erreur est survenue lors de l’exportation de vos données (Backup JSON).');
     }
   }, []);
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const backupData = JSON.parse(content);
+        await importBackupData(backupData);
+        await refreshDashboardStats();
+        if (backupData.data?.settings?.completed_chapters) {
+          setCompletedChapters(backupData.data.settings.completed_chapters);
+        }
+        alert("Importation réussie ! Votre progression académique et vos simulations ont été restaurées avec succès.");
+        event.target.value = '';
+      } catch (err) {
+        console.error("Format de sauvegarde invalide :", err);
+        alert("Échec d'importation : le fichier choisi n'est pas un fichier de sauvegarde BizPlan valide.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Support automatique du gestionnaire de fichiers PWA (launchQueue de l'OS)
+  useEffect(() => {
+    if ('launchQueue' in window) {
+      (window as any).launchQueue.setConsumer((launchParams: any) => {
+        if (!launchParams.files || launchParams.files.length === 0) return;
+        const fileHandle = launchParams.files[0];
+        fileHandle.getFile().then((file: File) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const content = e.target?.result as string;
+              const backupData = JSON.parse(content);
+              await importBackupData(backupData);
+              await refreshDashboardStats();
+              if (backupData.data?.settings?.completed_chapters) {
+                setCompletedChapters(backupData.data.settings.completed_chapters);
+              }
+              alert("Fichier ouvert avec succès ! Progression et simulations chargées via le gestionnaire de fichiers.");
+            } catch (err) {
+              console.error("Erreur de lecture du fichier via launchQueue :", err);
+            }
+          };
+          reader.readAsText(file);
+        });
+      });
+    }
+  }, [refreshDashboardStats]);
 
   // Navigations raccourcies inter-composants
   const selectQuizAndNavigate = useCallback((chapterId: string) => {
@@ -426,14 +478,27 @@ export default function App() {
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">Data Management</h4>
                 <div className="space-y-4">
-                   <p className="text-[10px] text-slate-500 leading-relaxed">Exportation JSON disponible pour l'archivage de vos sessions.</p>
-                   <button 
-                    onClick={handleExportData}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black rounded-xl border border-white/10 transition"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    BACKUP (.JSON)
-                  </button>
+                   <p className="text-[10px] text-slate-500 leading-relaxed">Exportation et importation JSON disponibles pour sauvegarder ou restaurer vos sessions.</p>
+                   <div className="flex flex-wrap gap-2">
+                     <button 
+                      onClick={handleExportData}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black rounded-xl border border-white/10 transition cursor-pointer"
+                     >
+                      <Download className="w-3.5 h-3.5" />
+                      EXPORTER (.JSON)
+                     </button>
+
+                     <label className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black rounded-xl border border-white/10 transition cursor-pointer">
+                      <Upload className="w-3.5 h-3.5" />
+                      IMPORTER (.JSON)
+                      <input 
+                        type="file" 
+                        accept=".json,.bplan" 
+                        onChange={handleImportFile} 
+                        className="hidden" 
+                      />
+                     </label>
+                   </div>
                 </div>
               </div>
             </div>

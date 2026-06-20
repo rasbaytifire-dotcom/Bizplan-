@@ -321,3 +321,51 @@ export async function getAllBackupData(): Promise<any> {
 
   return backup;
 }
+
+/**
+ * GLOBAL BACKUP IMPORT
+ * Restores everything into the object stores from a portable JSON structure.
+ */
+export async function importBackupData(backup: any): Promise<void> {
+  const db = await initDB();
+  const stores = ['lexicon', 'quiz_attempts', 'swot', 'settings', 'budget', 'org_nodes', 'bmc'];
+  
+  if (!backup || !backup.data) {
+    throw new Error("Format de sauvegarde invalide.");
+  }
+
+  for (const storeName of stores) {
+    if (!backup.data[storeName]) continue;
+
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    
+    // Clear old data first
+    await new Promise<void>((resolve, reject) => {
+      const clearReq = store.clear();
+      clearReq.onsuccess = () => resolve();
+      clearReq.onerror = () => reject(clearReq.error);
+    });
+
+    // Populate with new data
+    const items = backup.data[storeName];
+    if (storeName === 'settings') {
+      for (const [key, val] of Object.entries(items)) {
+        await new Promise<void>((resolve, reject) => {
+          const putReq = store.put(val, key);
+          putReq.onsuccess = () => resolve();
+          putReq.onerror = () => reject(putReq.error);
+        });
+      }
+    } else if (Array.isArray(items)) {
+      for (const item of items) {
+        await new Promise<void>((resolve, reject) => {
+          const putReq = store.put(item);
+          putReq.onsuccess = () => resolve();
+          putReq.onerror = () => reject(putReq.error);
+        });
+      }
+    }
+  }
+}
+

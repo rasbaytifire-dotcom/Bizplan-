@@ -1,12 +1,16 @@
 {
   "id": "bizplan-academy-pwa-v2",
   "name": "BizPlan Academy",
-  "short_name": "BizPlan",
-  "description": "Simulation et Apprentissage Business Plan",
-  "start_url": "https://ais-pre-ovnygos6qy62kdsazfand2-386454114574.europe-west2.run.app/",
+  "short_name": "BizPlan Academy",
+  "description": "Simulation et Apprentissage Business Plan académique par Theridialart Vision",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
+  "dir": "ltr",
+  "lang": "fr",
+  "orientation": "any",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -33,8 +37,52 @@
       "purpose": "maskable"
     }
   ],
-  "dir": "auto",
   "categories": [
+    "business",
+    "design",
     "education"
+  ],
+  "shortcuts": [
+    {
+      "name": "Cours de l'Académie",
+      "short_name": "Cours",
+      "description": "Accéder directement aux leçons académiques",
+      "url": "/?action=courses",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Canvas Stratégique",
+      "short_name": "BMC",
+      "description": "Éditer votre Business Model Canvas",
+      "url": "/?action=bmc",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "application/json": [".json", ".bplan"],
+        "text/plain": [".txt"]
+      },
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "single-client"
+    }
   ]
 }
