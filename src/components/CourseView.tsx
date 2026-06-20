@@ -9,6 +9,7 @@ interface CourseViewProps {
   isFocusMode?: boolean;
   onToggleFocus?: () => void;
   completedChapters?: string[];
+  onDownloadReport?: () => void;
 }
 
 export default function CourseView({ 
@@ -16,7 +17,8 @@ export default function CourseView({
   onStartExercise, 
   isFocusMode = false, 
   onToggleFocus,
-  completedChapters = []
+  completedChapters = [],
+  onDownloadReport
 }: CourseViewProps) {
   const [selectedChapterId, setSelectedChapterId] = useState<string | 'syllabus'>('syllabus');
 
@@ -176,6 +178,17 @@ export default function CourseView({
           <p className="text-slate-500 max-w-xl mx-auto text-base font-medium leading-relaxed">
             Sélectionnez un module pour entamer votre apprentissage théorique et pratique.
           </p>
+          {onDownloadReport && (
+            <div className="pt-2">
+              <button
+                onClick={onDownloadReport}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-100 hover:shadow-indigo-200 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <FileText className="w-4 h-4" />
+                EXPORTER MON RAPPORT ACADÉMIQUE (PDF)
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">

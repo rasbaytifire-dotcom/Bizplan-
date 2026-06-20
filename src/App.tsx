@@ -9,6 +9,7 @@ import LexiconView from './components/LexiconView';
 import BmcView from './components/BmcView';
 import ConfirmModal from './components/ConfirmModal';
 import { initDB, getQuizAttempts, getLexicon, getAllBackupData, importBackupData } from './lib/db';
+import { generateAcademicReport } from './lib/pdfGenerator';
 
 export default function App() {
   // Navigation state
@@ -230,6 +231,26 @@ export default function App() {
     );
   }, [quizCount, avgScore, lexCount]);
 
+  const handleGeneratePdfReport = useCallback(async () => {
+    try {
+      const backup = await getAllBackupData();
+      generateAcademicReport({
+        progressPercentage: computedProgressPercentage,
+        avgScore: avgScore,
+        completedChapters: completedChapters,
+        quizAttempts: backup.data?.quiz_attempts || [],
+        lexiconTerms: backup.data?.lexicon || [],
+        swotItems: backup.data?.swot || [],
+        bmcItems: backup.data?.bmc || [],
+        budgetItems: backup.data?.budget || [],
+        orgNodes: backup.data?.org_nodes || []
+      });
+    } catch (err) {
+      console.error('Erreur lors de la génération du rapport PDF:', err);
+      alert('Une erreur est survenue lors de la génération de votre rapport de progression académique.');
+    }
+  }, [computedProgressPercentage, avgScore, completedChapters]);
+
   return (
     <div className={`min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 flex flex-col font-sans transition-colors duration-300 ${isFocusMode ? 'focus-mode-active' : ''}`} id="applet-container">
       
@@ -383,16 +404,27 @@ export default function App() {
                 Glossaire
               </button>
 
-              {/* Print button specific to reading views */}
-              {(activeTab === 'cours' || activeTab === 'exercices') && (
+              {/* Print and PDF Report actions */}
+              <div className="ml-auto flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition h-9 border border-transparent hover:border-slate-200 rounded-lg dark:hover:border-slate-800"
+                  onClick={handleGeneratePdfReport}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-indigo-650 hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition h-9 rounded-lg shadow-sm cursor-pointer"
+                  title="Générer un rapport PDF simplifié de votre progression académique"
                 >
-                  <Printer className="w-4 h-4" />
-                  <span className="hidden sm:inline uppercase">Imprimer</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="uppercase text-[10px]">Rapport PDF</span>
                 </button>
-              )}
+
+                {(activeTab === 'cours' || activeTab === 'exercices') && (
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-350 dark:hover:text-indigo-400 transition h-9 border border-transparent hover:border-slate-200 rounded-lg dark:hover:border-slate-800 cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span className="hidden sm:inline uppercase">Imprimer</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </nav>
@@ -421,6 +453,7 @@ export default function App() {
               isFocusMode={isFocusMode}
               onToggleFocus={() => setIsFocusMode(!isFocusMode)}
               completedChapters={completedChapters}
+              onDownloadReport={handleGeneratePdfReport}
             />
           )}
 
@@ -478,8 +511,16 @@ export default function App() {
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">Data Management</h4>
                 <div className="space-y-4">
-                   <p className="text-[10px] text-slate-500 leading-relaxed">Exportation et importation JSON disponibles pour sauvegarder ou restaurer vos sessions.</p>
+                   <p className="text-[10px] text-slate-500 leading-relaxed">Sauvegardez l'état d'avancement de votre travail ou téléchargez votre rapport académique.</p>
                    <div className="flex flex-wrap gap-2">
+                     <button 
+                      onClick={handleGeneratePdfReport}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-black rounded-xl border border-indigo-700 transition cursor-pointer"
+                     >
+                      <FileText className="w-3.5 h-3.5" />
+                      TÉLÉCHARGER LE RAPPORT (.PDF)
+                     </button>
+
                      <button 
                       onClick={handleExportData}
                       className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black rounded-xl border border-white/10 transition cursor-pointer"
