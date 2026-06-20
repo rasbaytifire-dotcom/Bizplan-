@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Chapter } from '../types';
 import { chapters } from '../data/chapters';
-import { BookOpen, Compass, TrendingUp, Users, Truck, DollarSign, FileText, ChevronRight, Play, CheckCircle, Printer, Award } from 'lucide-react';
+import { BookOpen, Compass, TrendingUp, Users, Truck, DollarSign, FileText, ChevronRight, Play, CheckCircle, Printer, Award, Volume2, Pause, Square, Headphones } from 'lucide-react';
 
 interface CourseViewProps {
   onStartQuiz: (chapterId: string) => void;
@@ -21,6 +21,128 @@ export default function CourseView({
   const [selectedChapterId, setSelectedChapterId] = useState<string | 'syllabus'>('syllabus');
 
   const selectedChapter = chapters.find(c => c.id === selectedChapterId);
+
+  // Text-To-Speech (TTS) states
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [activeSpeechType, setActiveSpeechType] = useState<'full' | 'section' | null>(null);
+  const [activeSectionIdx, setActiveSectionIdx] = useState<number | null>(null);
+
+  // Stop speaking when user exits chapter view or changes module
+  React.useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [selectedChapterId]);
+
+  const handleStopSpeech = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setIsPaused(false);
+      setActiveSpeechType(null);
+      setActiveSectionIdx(null);
+    }
+  };
+
+  const handlePauseResumeSpeech = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      if (isPaused) {
+        window.speechSynthesis.resume();
+        setIsPaused(false);
+      } else {
+        window.speechSynthesis.pause();
+        setIsPaused(true);
+      }
+    }
+  };
+
+  const speakTextWithRate = (text: string, type: 'full' | 'section', sectionIdx: number | null, rate: number) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert("Votre navigateur ne supporte pas la synthèse vocale.");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    // Clean HTML tags or special quotes if any exist
+    const cleanText = text.replace(/«/g, '"').replace(/»/g, '"');
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'fr-FR';
+    utterance.rate = rate;
+
+    // Try to assign a French voice
+    const voices = window.speechSynthesis.getVoices();
+    const frVoice = voices.find(v => v.lang.startsWith('fr') || v.lang.includes('FR'));
+    if (frVoice) {
+      utterance.voice = frVoice;
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setIsPaused(false);
+      setActiveSpeechType(type);
+      setActiveSectionIdx(sectionIdx);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+      setActiveSpeechType(null);
+      setActiveSectionIdx(null);
+    };
+
+    utterance.onerror = (e) => {
+      console.error("SpeechSynthesis error:", e);
+      setIsSpeaking(false);
+      setIsPaused(false);
+      setActiveSpeechType(null);
+      setActiveSectionIdx(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const getFullText = (chapter: Chapter) => {
+    let text = `${chapter.title}. `;
+    text += `Introduction. ${chapter.introduction}. `;
+    chapter.sections.forEach((sec, idx) => {
+      text += `Section ${idx + 1} : ${sec.title}. `;
+      text += `Fondements théoriques. ${sec.theory}. `;
+      text += `Étude de cas. ${sec.example}. `;
+    });
+    text += `En conclusion. ${chapter.conclusion}. `;
+    return text;
+  };
+
+  const getSectionText = (sec: any, idx: number) => {
+    let text = `Section ${idx + 1} : ${sec.title}. `;
+    text += `Fondements théoriques. ${sec.theory}. `;
+    text += `Étude de cas : Café Vert. Application pratique. ${sec.example}. `;
+    return text;
+  };
+
+  const handleRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+    if (isSpeaking && activeSpeechType && selectedChapter) {
+      if (activeSpeechType === 'full') {
+        const fullText = getFullText(selectedChapter);
+        setTimeout(() => {
+          speakTextWithRate(fullText, 'full', null, rate);
+        }, 50);
+      } else if (activeSpeechType === 'section' && activeSectionIdx !== null) {
+        const sec = selectedChapter.sections[activeSectionIdx];
+        const sectionText = getSectionText(sec, activeSectionIdx);
+        setTimeout(() => {
+          speakTextWithRate(sectionText, 'section', activeSectionIdx, rate);
+        }, 50);
+      }
+    }
+  };
 
   // Map icon names to Lucide components
   const getIcon = (iconName: string, sizeClass: string = "w-5 h-5") => {
@@ -194,77 +316,207 @@ export default function CourseView({
                 « {selectedChapter.introduction} »
               </p>
             </div>
+
+            {/* Audio Lesson Guide (TTS) Panel */}
+            <div className="mt-6 bg-slate-50 border border-slate-100 rounded-3xl p-6 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 no-print">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isSpeaking ? 'bg-indigo-600 text-white animate-pulse' : 'bg-white text-slate-700 shadow-sm border border-slate-100'}`}>
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                      Audio-Guide d'Apprentissage
+                    </h4>
+                    {isSpeaking && !isPaused && (
+                      <div className="flex items-center gap-0.5 h-3 px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded-md">
+                        <span className="w-0.5 bg-indigo-600 rounded-full animate-[bounce_1s_infinite_100ms] h-2"></span>
+                        <span className="w-0.5 bg-indigo-600 rounded-full animate-[bounce_1s_infinite_300ms] h-2.5"></span>
+                        <span className="w-0.5 bg-indigo-600 rounded-full animate-[bounce_1s_infinite_200ms] h-1.5"></span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium max-w-md">
+                    {isSpeaking 
+                      ? (activeSpeechType === 'full' ? "Lecture du cours..." : "Lecture d'une section...") 
+                      : "Écoutez le contenu complet ou des sections individuelles."
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Speed Controls */}
+                <div className="flex items-center gap-1.5 p-1 bg-white border border-slate-100 rounded-xl shadow-sm">
+                  <span className="text-[9px] font-black uppercase text-slate-400 px-2 tracking-wider">Vitesse</span>
+                  {[0.8, 1, 1.2, 1.5].map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => handleRateChange(rate)}
+                      className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${playbackRate === rate ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-600'}`}
+                    >
+                      {rate === 1 ? '1x' : `${rate}x`}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Play/Pause/Stop Buttons */}
+                <div className="flex items-center gap-2">
+                  {!isSpeaking ? (
+                    <button
+                      onClick={() => speakTextWithRate(getFullText(selectedChapter), 'full', null, playbackRate)}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-indigo-100"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                      ÉCOUTER LE COURS
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handlePauseResumeSpeech}
+                        className="flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-black uppercase tracking-wider rounded-xl transition shadow-sm"
+                      >
+                        {isPaused ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <Pause className="w-4 h-4 text-amber-500" />}
+                        {isPaused ? "Reprendre" : "Pause"}
+                      </button>
+                      <button
+                        onClick={handleStopSpeech}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-black uppercase tracking-wider rounded-xl transition"
+                      >
+                        <Square className="w-4 h-4" />
+                        Arrêter
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="p-6 md:p-10 space-y-16">
             {/* Sections Loop */}
-            {selectedChapter.sections.map((sec, sIdx) => (
-              <div key={sIdx} className="space-y-6" id={`section-block-${sIdx}`}>
-                <div className="flex items-center gap-4">
-                  <span className="flex-shrink-0 w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-lg font-black italic shadow-lg shadow-slate-100">
-                    {sIdx + 1}
-                  </span>
-                  <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-                    {sec.title}
-                  </h2>
-                </div>
+            {selectedChapter.sections.map((sec, sIdx) => {
+              const isSectionActive = activeSpeechType === 'section' && activeSectionIdx === sIdx;
+              const isCurrentPlaying = isSectionActive && isSpeaking;
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
-                      Fondements théoriques
-                    </h3>
-                    <div className="text-slate-600 text-sm leading-relaxed p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
-                      {sec.theory}
+              return (
+                <div 
+                  key={sIdx} 
+                  className={`space-y-6 transition-all duration-500 rounded-3xl p-6 -mx-6 border ${
+                    isCurrentPlaying 
+                      ? 'bg-indigo-50/20 border-indigo-100 ring-2 ring-indigo-500/10 shadow-lg shadow-indigo-50/50' 
+                      : 'border-transparent'
+                  }`} 
+                  id={`section-block-${sIdx}`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <span className={`flex-shrink-0 w-10 h-10 rounded-2xl text-white flex items-center justify-center text-lg font-black italic shadow-lg transition-all duration-500 ${
+                        isCurrentPlaying ? 'bg-indigo-600 shadow-indigo-100 scale-110' : 'bg-slate-900 shadow-slate-100'
+                      }`}>
+                        {sIdx + 1}
+                      </span>
+                      <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
+                        {sec.title}
+                      </h2>
+                    </div>
+
+                    {/* Section TTS Trigger Box */}
+                    <div className="no-print flex items-center gap-2">
+                      {isSectionActive ? (
+                        <>
+                          <button
+                            onClick={handlePauseResumeSpeech}
+                            className={`p-2 rounded-xl border transition shadow-sm flex items-center gap-1.5 text-xs font-black uppercase tracking-wider ${
+                              isPaused 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100' 
+                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                            }`}
+                            title={isPaused ? "Reprendre" : "Pause"}
+                          >
+                            {isPaused ? <Volume2 className="w-4 h-4" /> : <Pause className="w-4 h-4 text-amber-500" />}
+                            <span className="hidden md:inline">{isPaused ? 'Reprendre' : 'Pause'}</span>
+                          </button>
+                          <button
+                            onClick={handleStopSpeech}
+                            className="p-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl transition text-xs font-black uppercase tracking-wider flex items-center gap-1.5"
+                            title="Arrêter"
+                          >
+                            <Square className="w-4 h-4" />
+                            <span className="hidden md:inline">Arrêter</span>
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => speakTextWithRate(getSectionText(sec, sIdx), 'section', sIdx, playbackRate)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 text-xs font-black uppercase tracking-wider rounded-xl transition cursor-pointer"
+                          title="Écouter cette section"
+                        >
+                          <Volume2 className="w-4 h-4" />
+                          <span className="text-[10px] tracking-widest font-black">ÉCOUTER</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
-                      Étude de cas : "Café Vert"
-                    </h3>
-                    <div className="text-slate-600 text-sm leading-relaxed p-6 bg-emerald-50/30 border border-emerald-100/50 rounded-3xl">
-                      <p className="font-bold text-emerald-900 mb-3 text-xs uppercase tracking-wide">Application pratique :</p>
-                      {sec.example}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full"></div>
+                        Fondements théoriques
+                      </h3>
+                      <div className="text-slate-600 text-sm leading-relaxed p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
+                        {sec.theory}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
+                        Étude de cas : "Café Vert"
+                      </h3>
+                      <div className="text-slate-600 text-sm leading-relaxed p-6 bg-emerald-50/30 border border-emerald-100/50 rounded-3xl">
+                        <p className="font-bold text-emerald-900 mb-3 text-xs uppercase tracking-wide">Application pratique :</p>
+                        {sec.example}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {sec.table && (
-                  <div className="mt-8 space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
-                      Synthèse & Données de référence
-                    </h3>
-                    <div className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
-                      <table className="min-w-full divide-y divide-slate-100 text-[11px] md:text-xs">
-                        <thead className="bg-slate-50 text-slate-900 font-black uppercase tracking-wider">
-                          <tr>
-                            {sec.table.headers.map((h, hIdx) => (
-                              <th key={hIdx} className="px-6 py-4 text-left">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-slate-50 text-slate-600">
-                          {sec.table.rows.map((row, rIdx) => (
-                            <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
-                              {row.map((cell, cIdx) => (
-                                <td key={cIdx} className="px-6 py-4 font-medium">
-                                  {cell}
-                                </td>
+                  {sec.table && (
+                    <div className="mt-8 space-y-4">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
+                        Synthèse & Données de référence
+                      </h3>
+                      <div className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                        <table className="min-w-full divide-y divide-slate-100 text-[11px] md:text-xs">
+                          <thead className="bg-slate-50 text-slate-900 font-black uppercase tracking-wider">
+                            <tr>
+                              {sec.table.headers.map((h, hIdx) => (
+                                <th key={hIdx} className="px-6 py-4 text-left">
+                                  {h}
+                                </th>
                               ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-slate-50 text-slate-600">
+                            {sec.table.rows.map((row, rIdx) => (
+                              <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
+                                {row.map((cell, cIdx) => (
+                                  <td key={cIdx} className="px-6 py-4 font-medium">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
             {selectedChapter.id === 'finance' && (
               <div className="mt-12 border border-indigo-100 rounded-3xl p-6 md:p-8 bg-gradient-to-br from-indigo-50/50 to-white space-y-6">
@@ -366,6 +618,5 @@ export default function CourseView({
           </div>
         </div>
       </div>
-    </div>
   );
 }

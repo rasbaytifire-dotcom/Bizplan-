@@ -3,7 +3,7 @@
   "name": "BizPlan Academy",
   "short_name": "BizPlan",
   "description": "Simulation et Apprentissage Business Plan",
-  "start_url": "/",
+  "start_url": "https://ais-pre-ovnygos6qy62kdsazfand2-386454114574.europe-west2.run.app/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
@@ -32,5 +32,9 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "dir": "auto",
+  "categories": [
+    "education"
   ]
 }
