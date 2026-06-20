@@ -1,13 +1,13 @@
 {
   "id": "bizplan-academy-pwa-v2",
-  "name": "BizPlan Academy",
+  "name": "bizplan-academy-pwa-v2",
   "short_name": "bizplan-academy",
   "description": "Simulation et Apprentissage Business Plan académique par Theridialart Vision",
-  "start_url": "/",
+  "start_url": "https://ais-pre-ovnygos6qy62kdsazfand2-386454114574.europe-west2.run.app/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#4f46e5",
-  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "dir": "ltr",
   "orientation": "any",
   "icons": [
